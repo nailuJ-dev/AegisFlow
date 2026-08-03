@@ -66,6 +66,7 @@ fn main() -> anyhow::Result<()> {
     };
     let capabilities = if cli.issue_capability {
 <<<<<<< HEAD
+<<<<<<< HEAD
         vec![
             Capability::issue(operation, cli.subject.clone(), cli.ttl_seconds)
                 .context("capability issuance failed")?,
@@ -90,11 +91,14 @@ fn main() -> anyhow::Result<()> {
     );
 =======
         vec![Capability::issue(operation, cli.subject, cli.ttl_seconds).context("capability issuance failed")?]
+=======
+        vec![Capability::issue(operation, cli.subject.clone(), cli.ttl_seconds).context("capability issuance failed")?]
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
     } else { Vec::new() };
-    let request = ToolRequest::new(operation, label, cli.argument);
+    let request = ToolRequest::new(&cli.subject, operation, label, cli.argument);
     let decision = PolicyEngine.evaluate(&request, &capabilities);
     let mut audit = AuditChain::default();
-    audit.append("workflow-local", format!("{}:{}", decision.allowed, decision.reason))?;
+    audit.append(&cli.subject, format!("{}:{}", decision.allowed, decision.reason))?;
     println!("{}", serde_json::to_string_pretty(&serde_json::json!({
         "decision": decision,
         "audit_valid": audit.verify(),

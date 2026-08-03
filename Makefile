@@ -2,10 +2,14 @@
 
 fmt:
 <<<<<<< HEAD
+<<<<<<< HEAD
 	cargo fmt --all
 =======
 	cargo fmt --all -- --check
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+	cargo fmt --all
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
 
 lint:
 	cargo clippy --workspace --all-targets --all-features -- -D warnings

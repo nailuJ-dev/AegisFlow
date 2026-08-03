@@ -1,10 +1,14 @@
 //! Deny-by-default policy, capability, taint-label, and tamper-evident audit primitives.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 use std::time::{SystemTime, UNIX_EPOCH};
 =======
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+use std::time::{SystemTime, UNIX_EPOCH};
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -17,6 +21,9 @@ const MAX_ARGUMENT_BYTES: usize = 64 * 1024;
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
 pub enum DataLabel {
     /// Public information.
     Public,
@@ -27,14 +34,20 @@ pub enum DataLabel {
     /// Confidential data that must not cross network boundaries.
     Secret,
 }
+<<<<<<< HEAD
 =======
 pub enum DataLabel { Public, Trusted, Untrusted, Secret }
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
 
 /// Operations that require explicit policy decisions.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
 pub enum Operation {
     /// Read a local file through a constrained adapter.
     FileRead,
@@ -47,19 +60,27 @@ pub enum Operation {
     /// Read a secret from an approved secret store.
     SecretRead,
 }
+<<<<<<< HEAD
 =======
 pub enum Operation { FileRead, FileWrite, NetworkGet, NetworkPost, SecretRead }
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
 
 /// A typed request produced by a planner. It is not executed directly.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct ToolRequest {
 <<<<<<< HEAD
+<<<<<<< HEAD
     /// Stable workflow or principal identifier.
     pub subject: String,
 =======
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+    /// Stable workflow or principal identifier.
+    pub subject: String,
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
     /// Requested operation.
     pub operation: Operation,
     /// Taint label of the argument.
@@ -72,12 +93,16 @@ impl ToolRequest {
     /// Creates a request. Oversized arguments are retained but denied by policy.
     #[must_use]
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
     pub fn new(
         subject: impl Into<String>,
         operation: Operation,
         label: DataLabel,
         argument: impl Into<String>,
     ) -> Self {
+<<<<<<< HEAD
         Self {
             subject: subject.into(),
             operation,
@@ -88,16 +113,23 @@ impl ToolRequest {
     pub fn new(operation: Operation, label: DataLabel, argument: impl Into<String>) -> Self {
         Self { operation, label, argument: argument.into() }
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+        Self { subject: subject.into(), operation, label, argument: argument.into() }
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
     }
 }
 
 /// Short-lived authorization scoped to an operation and workflow subject.
+<<<<<<< HEAD
 <<<<<<< HEAD
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 =======
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
 pub struct Capability {
     id: Uuid,
     operation: Operation,
@@ -154,18 +186,27 @@ impl Capability {
         Ok(Self { id: Uuid::new_v4(), operation, subject, expires_unix_seconds: now.saturating_add(ttl_seconds) })
     }
 
+<<<<<<< HEAD
     fn authorizes(&self, operation: Operation, now: u64) -> bool {
         self.operation == operation && now <= self.expires_unix_seconds
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+    fn authorizes(&self, operation: Operation, subject: &str, now: u64) -> bool {
+        self.operation == operation && self.subject == subject && now <= self.expires_unix_seconds
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
     }
 }
 
 /// Explainable policy result.
 <<<<<<< HEAD
+<<<<<<< HEAD
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 =======
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
 pub struct Decision {
     /// Whether execution may proceed.
     pub allowed: bool,
@@ -181,6 +222,7 @@ impl PolicyEngine {
     /// Evaluates label flow, request bounds, and capabilities.
     #[must_use]
     pub fn evaluate(&self, request: &ToolRequest, capabilities: &[Capability]) -> Decision {
+<<<<<<< HEAD
 <<<<<<< HEAD
         if request.subject.is_empty() || request.subject.len() > 256 {
             return Decision {
@@ -237,6 +279,11 @@ impl PolicyEngine {
                 reason: "no matching unexpired capability",
             }
 =======
+=======
+        if request.subject.is_empty() || request.subject.len() > 256 {
+            return Decision { allowed: false, reason: "workflow subject is outside configured bounds" };
+        }
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
         if request.argument.len() > MAX_ARGUMENT_BYTES {
             return Decision { allowed: false, reason: "argument exceeds the configured policy limit" };
         }
@@ -250,7 +297,7 @@ impl PolicyEngine {
             return Decision { allowed: false, reason: "untrusted data cannot drive a sensitive operation" };
         }
         let now = unix_seconds().unwrap_or(u64::MAX);
-        if capabilities.iter().any(|capability| capability.authorizes(request.operation, now)) {
+        if capabilities.iter().any(|capability| capability.authorizes(request.operation, &request.subject, now)) {
             Decision { allowed: true, reason: "matching unexpired capability" }
         } else {
             Decision { allowed: false, reason: "no matching unexpired capability" }
@@ -261,10 +308,14 @@ impl PolicyEngine {
 
 /// A tamper-evident audit entry.
 <<<<<<< HEAD
+<<<<<<< HEAD
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 =======
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
 pub struct AuditEntry {
     sequence: u64,
     workflow_id: String,
@@ -275,12 +326,16 @@ pub struct AuditEntry {
 
 /// Append-only in-memory audit chain. Persist entries through an external append-only adapter.
 <<<<<<< HEAD
+<<<<<<< HEAD
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct AuditChain {
     entries: Vec<AuditEntry>,
 }
 =======
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+=======
+#[derive(Clone, Debug, Default, Serialize)]
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
 pub struct AuditChain { entries: Vec<AuditEntry> }
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 
@@ -393,6 +448,7 @@ fn calculate_hash(sequence: u64, workflow_id: &str, event: &str, previous_hash: 
 
 fn unix_seconds() -> Result<u64, CapabilityError> {
 <<<<<<< HEAD
+<<<<<<< HEAD
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_secs())
@@ -400,4 +456,7 @@ fn unix_seconds() -> Result<u64, CapabilityError> {
 =======
     SystemTime::now().duration_since(UNIX_EPOCH).map(Duration::as_secs).map_err(|_| CapabilityError::Clock)
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+    SystemTime::now().duration_since(UNIX_EPOCH).map(|duration| duration.as_secs()).map_err(|_| CapabilityError::Clock)
+>>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
 }
