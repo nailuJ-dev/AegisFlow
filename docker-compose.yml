@@ -1,0 +1,17 @@
+services:
+  aegisflow:
+    build: .
+    image: aegisflow:local
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,noexec,nosuid,nodev
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      APP_BIND: 0.0.0.0:8080
+      APP_MAX_BODY_BYTES: "1048576"
+      RUST_LOG: info
+    ports:
+      - "8080:8080"

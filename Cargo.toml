@@ -1,0 +1,48 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/aegisflow-core",
+  "crates/aegisflow-service",
+  "crates/aegisflow-cli",
+]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nailuJ-dev/aegisflow"
+authors = ["NailuJ-dev contributors"]
+description = "Capability-secured workflow runtime for AI agents"
+
+[workspace.dependencies]
+anyhow = "1"
+axum = { version = "0.8", features = ["json", "tokio", "http1"] }
+clap = { version = "4", features = ["derive", "env"] }
+hex = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+thiserror = "2"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "net", "time"] }
+tower-http = { version = "0.6", features = ["trace", "request-id", "catch-panic"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+proptest = "1"
+
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+rust_2018_idioms = { level = "deny", priority = -1 }
+unused_lifetimes = "deny"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+index_refutable_slice = "deny"
