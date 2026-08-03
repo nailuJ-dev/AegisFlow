@@ -1,6 +1,10 @@
 //! Deny-by-default policy, capability, taint-label, and tamper-evident audit primitives.
 
+<<<<<<< HEAD
 use std::time::{SystemTime, UNIX_EPOCH};
+=======
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -12,6 +16,7 @@ const MAX_ARGUMENT_BYTES: usize = 64 * 1024;
 /// Classification attached to data as it crosses workflow boundaries.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
+<<<<<<< HEAD
 pub enum DataLabel {
     /// Public information.
     Public,
@@ -22,10 +27,14 @@ pub enum DataLabel {
     /// Confidential data that must not cross network boundaries.
     Secret,
 }
+=======
+pub enum DataLabel { Public, Trusted, Untrusted, Secret }
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 
 /// Operations that require explicit policy decisions.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
+<<<<<<< HEAD
 pub enum Operation {
     /// Read a local file through a constrained adapter.
     FileRead,
@@ -38,13 +47,19 @@ pub enum Operation {
     /// Read a secret from an approved secret store.
     SecretRead,
 }
+=======
+pub enum Operation { FileRead, FileWrite, NetworkGet, NetworkPost, SecretRead }
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 
 /// A typed request produced by a planner. It is not executed directly.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct ToolRequest {
+<<<<<<< HEAD
     /// Stable workflow or principal identifier.
     pub subject: String,
+=======
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
     /// Requested operation.
     pub operation: Operation,
     /// Taint label of the argument.
@@ -56,6 +71,7 @@ pub struct ToolRequest {
 impl ToolRequest {
     /// Creates a request. Oversized arguments are retained but denied by policy.
     #[must_use]
+<<<<<<< HEAD
     pub fn new(
         subject: impl Into<String>,
         operation: Operation,
@@ -68,11 +84,20 @@ impl ToolRequest {
             label,
             argument: argument.into(),
         }
+=======
+    pub fn new(operation: Operation, label: DataLabel, argument: impl Into<String>) -> Self {
+        Self { operation, label, argument: argument.into() }
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
     }
 }
 
 /// Short-lived authorization scoped to an operation and workflow subject.
+<<<<<<< HEAD
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+=======
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 pub struct Capability {
     id: Uuid,
     operation: Operation,
@@ -96,6 +121,7 @@ pub enum CapabilityError {
 
 impl Capability {
     /// Issues a bounded capability. Production deployments should replace this local issuer with a signed authority.
+<<<<<<< HEAD
     pub fn issue(
         operation: Operation,
         subject: impl Into<String>,
@@ -119,11 +145,27 @@ impl Capability {
 
     fn authorizes(&self, operation: Operation, subject: &str, now: u64) -> bool {
         self.operation == operation && self.subject == subject && now <= self.expires_unix_seconds
+=======
+    pub fn issue(operation: Operation, subject: impl Into<String>, ttl_seconds: u64) -> Result<Self, CapabilityError> {
+        let subject = subject.into();
+        if subject.is_empty() || subject.len() > 256 { return Err(CapabilityError::InvalidSubject); }
+        if !(1..=3600).contains(&ttl_seconds) { return Err(CapabilityError::InvalidTtl); }
+        let now = unix_seconds()?;
+        Ok(Self { id: Uuid::new_v4(), operation, subject, expires_unix_seconds: now.saturating_add(ttl_seconds) })
+    }
+
+    fn authorizes(&self, operation: Operation, now: u64) -> bool {
+        self.operation == operation && now <= self.expires_unix_seconds
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
     }
 }
 
 /// Explainable policy result.
+<<<<<<< HEAD
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+=======
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 pub struct Decision {
     /// Whether execution may proceed.
     pub allowed: bool,
@@ -139,6 +181,7 @@ impl PolicyEngine {
     /// Evaluates label flow, request bounds, and capabilities.
     #[must_use]
     pub fn evaluate(&self, request: &ToolRequest, capabilities: &[Capability]) -> Decision {
+<<<<<<< HEAD
         if request.subject.is_empty() || request.subject.len() > 256 {
             return Decision {
                 allowed: false,
@@ -193,12 +236,35 @@ impl PolicyEngine {
                 allowed: false,
                 reason: "no matching unexpired capability",
             }
+=======
+        if request.argument.len() > MAX_ARGUMENT_BYTES {
+            return Decision { allowed: false, reason: "argument exceeds the configured policy limit" };
+        }
+        if request.argument.as_bytes().contains(&0) {
+            return Decision { allowed: false, reason: "argument contains a NUL byte" };
+        }
+        if request.label == DataLabel::Secret && matches!(request.operation, Operation::NetworkGet | Operation::NetworkPost) {
+            return Decision { allowed: false, reason: "secret data cannot cross the network boundary" };
+        }
+        if request.label == DataLabel::Untrusted && matches!(request.operation, Operation::FileWrite | Operation::SecretRead) {
+            return Decision { allowed: false, reason: "untrusted data cannot drive a sensitive operation" };
+        }
+        let now = unix_seconds().unwrap_or(u64::MAX);
+        if capabilities.iter().any(|capability| capability.authorizes(request.operation, now)) {
+            Decision { allowed: true, reason: "matching unexpired capability" }
+        } else {
+            Decision { allowed: false, reason: "no matching unexpired capability" }
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
         }
     }
 }
 
 /// A tamper-evident audit entry.
+<<<<<<< HEAD
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+=======
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 pub struct AuditEntry {
     sequence: u64,
     workflow_id: String,
@@ -208,10 +274,15 @@ pub struct AuditEntry {
 }
 
 /// Append-only in-memory audit chain. Persist entries through an external append-only adapter.
+<<<<<<< HEAD
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct AuditChain {
     entries: Vec<AuditEntry>,
 }
+=======
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct AuditChain { entries: Vec<AuditEntry> }
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 
 /// Audit validation errors.
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -223,6 +294,7 @@ pub enum AuditError {
 
 impl AuditChain {
     /// Appends a hashed event.
+<<<<<<< HEAD
     pub fn append(
         &mut self,
         workflow_id: impl Into<String>,
@@ -250,6 +322,18 @@ impl AuditChain {
             previous_hash,
             hash,
         });
+=======
+    pub fn append(&mut self, workflow_id: impl Into<String>, event: impl Into<String>) -> Result<&AuditEntry, AuditError> {
+        let workflow_id = workflow_id.into();
+        let event = event.into();
+        if workflow_id.is_empty() || workflow_id.len() > 256 || event.is_empty() || event.len() > 4096 {
+            return Err(AuditError::Oversized);
+        }
+        let sequence = u64::try_from(self.entries.len()).unwrap_or(u64::MAX);
+        let previous_hash = self.entries.last().map_or_else(|| "0".repeat(64), |entry| entry.hash.clone());
+        let hash = calculate_hash(sequence, &workflow_id, &event, &previous_hash);
+        self.entries.push(AuditEntry { sequence, workflow_id, event, previous_hash, hash });
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
         self.entries.last().ok_or(AuditError::Oversized)
     }
 
@@ -258,6 +342,7 @@ impl AuditChain {
     pub fn verify(&self) -> bool {
         let mut previous = "0".repeat(64);
         for (index, entry) in self.entries.iter().enumerate() {
+<<<<<<< HEAD
             if entry.sequence != u64::try_from(index).unwrap_or(u64::MAX)
                 || entry.previous_hash != previous
             {
@@ -272,6 +357,13 @@ impl AuditChain {
             if entry.hash != expected {
                 return false;
             }
+=======
+            if entry.sequence != u64::try_from(index).unwrap_or(u64::MAX) || entry.previous_hash != previous {
+                return false;
+            }
+            let expected = calculate_hash(entry.sequence, &entry.workflow_id, &entry.event, &entry.previous_hash);
+            if entry.hash != expected { return false; }
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
             previous.clone_from(&entry.hash);
         }
         true
@@ -279,9 +371,13 @@ impl AuditChain {
 
     /// Entries for persistence or inspection.
     #[must_use]
+<<<<<<< HEAD
     pub fn entries(&self) -> &[AuditEntry] {
         &self.entries
     }
+=======
+    pub fn entries(&self) -> &[AuditEntry] { &self.entries }
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 }
 
 fn calculate_hash(sequence: u64, workflow_id: &str, event: &str, previous_hash: &str) -> String {
@@ -296,8 +392,12 @@ fn calculate_hash(sequence: u64, workflow_id: &str, event: &str, previous_hash: 
 }
 
 fn unix_seconds() -> Result<u64, CapabilityError> {
+<<<<<<< HEAD
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_secs())
         .map_err(|_| CapabilityError::Clock)
+=======
+    SystemTime::now().duration_since(UNIX_EPOCH).map(Duration::as_secs).map_err(|_| CapabilityError::Clock)
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 }

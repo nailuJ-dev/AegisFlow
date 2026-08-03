@@ -1,7 +1,11 @@
 .PHONY: fmt lint test doc audit deny verify run docker
 
 fmt:
+<<<<<<< HEAD
 	cargo fmt --all
+=======
+	cargo fmt --all -- --check
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 
 lint:
 	cargo clippy --workspace --all-targets --all-features -- -D warnings

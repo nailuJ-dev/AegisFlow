@@ -24,8 +24,13 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
 thiserror = "2"
+<<<<<<< HEAD
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "net", "time", "sync"] }
 tower-http = { version = "0.7", features = ["trace", "request-id", "catch-panic"] }
+=======
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "net", "time"] }
+tower-http = { version = "0.6", features = ["trace", "request-id", "catch-panic"] }
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 uuid = { version = "1", features = ["v4", "serde"] }
@@ -34,6 +39,7 @@ proptest = "1"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
+<<<<<<< HEAD
 missing_docs = "allow"
 rust_2018_idioms = { level = "deny", priority = -1 }
 unused_lifetimes = "deny"
@@ -45,3 +51,17 @@ pedantic = { level = "allow", priority = -1 }
 unwrap_used = "deny"
 expect_used = "deny"
 panic = "deny"
+=======
+missing_docs = "warn"
+rust_2018_idioms = { level = "deny", priority = -1 }
+unused_lifetimes = "deny"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+index_refutable_slice = "deny"
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)

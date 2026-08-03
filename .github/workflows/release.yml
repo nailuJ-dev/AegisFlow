@@ -2,11 +2,15 @@ name: Release
 on:
   push:
     tags: ["v*"]
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 permissions:
   contents: write
   packages: write
   id-token: write
+<<<<<<< HEAD
 
 jobs:
   verify-and-publish:
@@ -20,6 +24,14 @@ jobs:
       - run: cargo fmt --all
       - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
       - run: cargo test --workspace --all-features
+=======
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
       - run: cargo build --release --workspace
       - uses: anchore/sbom-action@v0
         with:
@@ -29,6 +41,7 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           files: sbom.spdx.json
+<<<<<<< HEAD
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -44,3 +57,5 @@ jobs:
             ghcr.io/nailuj-dev/aegisflow:latest
           provenance: true
           sbom: true
+=======
+>>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
