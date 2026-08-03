@@ -12,6 +12,8 @@ services:
     environment:
       APP_BIND: 0.0.0.0:8080
       APP_MAX_BODY_BYTES: "1048576"
+      APP_MAX_CONCURRENCY: "32"
+      APP_REQUEST_TIMEOUT_SECONDS: "30"
       RUST_LOG: info
     ports:
       - "8080:8080"

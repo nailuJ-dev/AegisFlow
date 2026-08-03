@@ -1,7 +1,7 @@
 .PHONY: fmt lint test doc audit deny verify run docker
 
 fmt:
-	cargo fmt --all -- --check
+	cargo fmt --all
 
 lint:
 	cargo clippy --workspace --all-targets --all-features -- -D warnings

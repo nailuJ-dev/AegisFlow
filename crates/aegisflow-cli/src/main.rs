@@ -40,12 +40,12 @@ fn main() -> anyhow::Result<()> {
         CliLabel::Secret => DataLabel::Secret,
     };
     let capabilities = if cli.issue_capability {
-        vec![Capability::issue(operation, cli.subject, cli.ttl_seconds).context("capability issuance failed")?]
+        vec![Capability::issue(operation, cli.subject.clone(), cli.ttl_seconds).context("capability issuance failed")?]
     } else { Vec::new() };
-    let request = ToolRequest::new(operation, label, cli.argument);
+    let request = ToolRequest::new(&cli.subject, operation, label, cli.argument);
     let decision = PolicyEngine.evaluate(&request, &capabilities);
     let mut audit = AuditChain::default();
-    audit.append("workflow-local", format!("{}:{}", decision.allowed, decision.reason))?;
+    audit.append(&cli.subject, format!("{}:{}", decision.allowed, decision.reason))?;
     println!("{}", serde_json::to_string_pretty(&serde_json::json!({
         "decision": decision,
         "audit_valid": audit.verify(),
