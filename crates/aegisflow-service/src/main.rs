@@ -120,9 +120,8 @@ async fn health(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 
 async fn metrics(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     let requests = state.requests.load(Ordering::Relaxed);
-    let body = format!(
-        "# TYPE aegisflow_requests_total counter\naegisflow_requests_total {requests}\n"
-    );
+    let body =
+        format!("# TYPE aegisflow_requests_total counter\naegisflow_requests_total {requests}\n");
     ([(header::CONTENT_TYPE, "text/plain; version=0.0.4")], body)
 }
 

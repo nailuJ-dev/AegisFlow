@@ -62,7 +62,12 @@ impl ToolRequest {
         label: DataLabel,
         argument: impl Into<String>,
     ) -> Self {
-        Self { subject: subject.into(), operation, label, argument: argument.into() }
+        Self {
+            subject: subject.into(),
+            operation,
+            label,
+            argument: argument.into(),
+        }
     }
 }
 
@@ -91,12 +96,25 @@ pub enum CapabilityError {
 
 impl Capability {
     /// Issues a bounded capability. Production deployments should replace this local issuer with a signed authority.
-    pub fn issue(operation: Operation, subject: impl Into<String>, ttl_seconds: u64) -> Result<Self, CapabilityError> {
+    pub fn issue(
+        operation: Operation,
+        subject: impl Into<String>,
+        ttl_seconds: u64,
+    ) -> Result<Self, CapabilityError> {
         let subject = subject.into();
-        if subject.is_empty() || subject.len() > 256 { return Err(CapabilityError::InvalidSubject); }
-        if !(1..=3600).contains(&ttl_seconds) { return Err(CapabilityError::InvalidTtl); }
+        if subject.is_empty() || subject.len() > 256 {
+            return Err(CapabilityError::InvalidSubject);
+        }
+        if !(1..=3600).contains(&ttl_seconds) {
+            return Err(CapabilityError::InvalidTtl);
+        }
         let now = unix_seconds()?;
-        Ok(Self { id: Uuid::new_v4(), operation, subject, expires_unix_seconds: now.saturating_add(ttl_seconds) })
+        Ok(Self {
+            id: Uuid::new_v4(),
+            operation,
+            subject,
+            expires_unix_seconds: now.saturating_add(ttl_seconds),
+        })
     }
 
     fn authorizes(&self, operation: Operation, subject: &str, now: u64) -> bool {
@@ -122,25 +140,59 @@ impl PolicyEngine {
     #[must_use]
     pub fn evaluate(&self, request: &ToolRequest, capabilities: &[Capability]) -> Decision {
         if request.subject.is_empty() || request.subject.len() > 256 {
-            return Decision { allowed: false, reason: "workflow subject is outside configured bounds" };
+            return Decision {
+                allowed: false,
+                reason: "workflow subject is outside configured bounds",
+            };
         }
         if request.argument.len() > MAX_ARGUMENT_BYTES {
-            return Decision { allowed: false, reason: "argument exceeds the configured policy limit" };
+            return Decision {
+                allowed: false,
+                reason: "argument exceeds the configured policy limit",
+            };
         }
         if request.argument.as_bytes().contains(&0) {
-            return Decision { allowed: false, reason: "argument contains a NUL byte" };
+            return Decision {
+                allowed: false,
+                reason: "argument contains a NUL byte",
+            };
         }
-        if request.label == DataLabel::Secret && matches!(request.operation, Operation::NetworkGet | Operation::NetworkPost) {
-            return Decision { allowed: false, reason: "secret data cannot cross the network boundary" };
+        if request.label == DataLabel::Secret
+            && matches!(
+                request.operation,
+                Operation::NetworkGet | Operation::NetworkPost
+            )
+        {
+            return Decision {
+                allowed: false,
+                reason: "secret data cannot cross the network boundary",
+            };
         }
-        if request.label == DataLabel::Untrusted && matches!(request.operation, Operation::FileWrite | Operation::SecretRead) {
-            return Decision { allowed: false, reason: "untrusted data cannot drive a sensitive operation" };
+        if request.label == DataLabel::Untrusted
+            && matches!(
+                request.operation,
+                Operation::FileWrite | Operation::SecretRead
+            )
+        {
+            return Decision {
+                allowed: false,
+                reason: "untrusted data cannot drive a sensitive operation",
+            };
         }
         let now = unix_seconds().unwrap_or(u64::MAX);
-        if capabilities.iter().any(|capability| capability.authorizes(request.operation, &request.subject, now)) {
-            Decision { allowed: true, reason: "matching unexpired capability" }
+        if capabilities
+            .iter()
+            .any(|capability| capability.authorizes(request.operation, &request.subject, now))
+        {
+            Decision {
+                allowed: true,
+                reason: "matching unexpired capability",
+            }
         } else {
-            Decision { allowed: false, reason: "no matching unexpired capability" }
+            Decision {
+                allowed: false,
+                reason: "no matching unexpired capability",
+            }
         }
     }
 }
@@ -157,7 +209,9 @@ pub struct AuditEntry {
 
 /// Append-only in-memory audit chain. Persist entries through an external append-only adapter.
 #[derive(Clone, Debug, Default, Serialize)]
-pub struct AuditChain { entries: Vec<AuditEntry> }
+pub struct AuditChain {
+    entries: Vec<AuditEntry>,
+}
 
 /// Audit validation errors.
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -169,16 +223,33 @@ pub enum AuditError {
 
 impl AuditChain {
     /// Appends a hashed event.
-    pub fn append(&mut self, workflow_id: impl Into<String>, event: impl Into<String>) -> Result<&AuditEntry, AuditError> {
+    pub fn append(
+        &mut self,
+        workflow_id: impl Into<String>,
+        event: impl Into<String>,
+    ) -> Result<&AuditEntry, AuditError> {
         let workflow_id = workflow_id.into();
         let event = event.into();
-        if workflow_id.is_empty() || workflow_id.len() > 256 || event.is_empty() || event.len() > 4096 {
+        if workflow_id.is_empty()
+            || workflow_id.len() > 256
+            || event.is_empty()
+            || event.len() > 4096
+        {
             return Err(AuditError::Oversized);
         }
         let sequence = u64::try_from(self.entries.len()).unwrap_or(u64::MAX);
-        let previous_hash = self.entries.last().map_or_else(|| "0".repeat(64), |entry| entry.hash.clone());
+        let previous_hash = self
+            .entries
+            .last()
+            .map_or_else(|| "0".repeat(64), |entry| entry.hash.clone());
         let hash = calculate_hash(sequence, &workflow_id, &event, &previous_hash);
-        self.entries.push(AuditEntry { sequence, workflow_id, event, previous_hash, hash });
+        self.entries.push(AuditEntry {
+            sequence,
+            workflow_id,
+            event,
+            previous_hash,
+            hash,
+        });
         self.entries.last().ok_or(AuditError::Oversized)
     }
 
@@ -187,11 +258,20 @@ impl AuditChain {
     pub fn verify(&self) -> bool {
         let mut previous = "0".repeat(64);
         for (index, entry) in self.entries.iter().enumerate() {
-            if entry.sequence != u64::try_from(index).unwrap_or(u64::MAX) || entry.previous_hash != previous {
+            if entry.sequence != u64::try_from(index).unwrap_or(u64::MAX)
+                || entry.previous_hash != previous
+            {
                 return false;
             }
-            let expected = calculate_hash(entry.sequence, &entry.workflow_id, &entry.event, &entry.previous_hash);
-            if entry.hash != expected { return false; }
+            let expected = calculate_hash(
+                entry.sequence,
+                &entry.workflow_id,
+                &entry.event,
+                &entry.previous_hash,
+            );
+            if entry.hash != expected {
+                return false;
+            }
             previous.clone_from(&entry.hash);
         }
         true
@@ -199,7 +279,9 @@ impl AuditChain {
 
     /// Entries for persistence or inspection.
     #[must_use]
-    pub fn entries(&self) -> &[AuditEntry] { &self.entries }
+    pub fn entries(&self) -> &[AuditEntry] {
+        &self.entries
+    }
 }
 
 fn calculate_hash(sequence: u64, workflow_id: &str, event: &str, previous_hash: &str) -> String {
@@ -214,5 +296,8 @@ fn calculate_hash(sequence: u64, workflow_id: &str, event: &str, previous_hash: 
 }
 
 fn unix_seconds() -> Result<u64, CapabilityError> {
-    SystemTime::now().duration_since(UNIX_EPOCH).map(|duration| duration.as_secs()).map_err(|_| CapabilityError::Clock)
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_secs())
+        .map_err(|_| CapabilityError::Clock)
 }

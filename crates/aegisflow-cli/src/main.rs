@@ -3,7 +3,11 @@ use anyhow::Context;
 use clap::{Parser, ValueEnum};
 
 #[derive(Debug, Parser)]
-#[command(name = "aegisflow", version, about = "Evaluate an agent tool request against a deny-by-default policy")]
+#[command(
+    name = "aegisflow",
+    version,
+    about = "Evaluate an agent tool request against a deny-by-default policy"
+)]
 struct Cli {
     #[arg(long, value_enum)]
     operation: CliOperation,
@@ -20,9 +24,20 @@ struct Cli {
 }
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
-enum CliOperation { FileRead, FileWrite, NetworkGet, NetworkPost, SecretRead }
+enum CliOperation {
+    FileRead,
+    FileWrite,
+    NetworkGet,
+    NetworkPost,
+    SecretRead,
+}
 #[derive(Clone, Copy, Debug, ValueEnum)]
-enum CliLabel { Public, Trusted, Untrusted, Secret }
+enum CliLabel {
+    Public,
+    Trusted,
+    Untrusted,
+    Secret,
+}
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
@@ -40,16 +55,27 @@ fn main() -> anyhow::Result<()> {
         CliLabel::Secret => DataLabel::Secret,
     };
     let capabilities = if cli.issue_capability {
-        vec![Capability::issue(operation, cli.subject.clone(), cli.ttl_seconds).context("capability issuance failed")?]
-    } else { Vec::new() };
+        vec![
+            Capability::issue(operation, cli.subject.clone(), cli.ttl_seconds)
+                .context("capability issuance failed")?,
+        ]
+    } else {
+        Vec::new()
+    };
     let request = ToolRequest::new(&cli.subject, operation, label, cli.argument);
     let decision = PolicyEngine.evaluate(&request, &capabilities);
     let mut audit = AuditChain::default();
-    audit.append(&cli.subject, format!("{}:{}", decision.allowed, decision.reason))?;
-    println!("{}", serde_json::to_string_pretty(&serde_json::json!({
-        "decision": decision,
-        "audit_valid": audit.verify(),
-        "audit": audit.entries(),
-    }))?);
+    audit.append(
+        &cli.subject,
+        format!("{}:{}", decision.allowed, decision.reason),
+    )?;
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&serde_json::json!({
+            "decision": decision,
+            "audit_valid": audit.verify(),
+            "audit": audit.entries(),
+        }))?
+    );
     Ok(())
 }
