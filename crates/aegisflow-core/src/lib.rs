@@ -103,12 +103,16 @@ impl ToolRequest {
         argument: impl Into<String>,
     ) -> Self {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 9910f1a (Push first version)
         Self {
             subject: subject.into(),
             operation,
             label,
             argument: argument.into(),
         }
+<<<<<<< HEAD
 =======
     pub fn new(operation: Operation, label: DataLabel, argument: impl Into<String>) -> Self {
         Self { operation, label, argument: argument.into() }
@@ -116,6 +120,8 @@ impl ToolRequest {
 =======
         Self { subject: subject.into(), operation, label, argument: argument.into() }
 >>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
+=======
+>>>>>>> 9910f1a (Push first version)
     }
 }
 
@@ -154,11 +160,15 @@ pub enum CapabilityError {
 impl Capability {
     /// Issues a bounded capability. Production deployments should replace this local issuer with a signed authority.
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 9910f1a (Push first version)
     pub fn issue(
         operation: Operation,
         subject: impl Into<String>,
         ttl_seconds: u64,
     ) -> Result<Self, CapabilityError> {
+<<<<<<< HEAD
         let subject = subject.into();
         if subject.is_empty() || subject.len() > 256 {
             return Err(CapabilityError::InvalidSubject);
@@ -179,11 +189,22 @@ impl Capability {
         self.operation == operation && self.subject == subject && now <= self.expires_unix_seconds
 =======
     pub fn issue(operation: Operation, subject: impl Into<String>, ttl_seconds: u64) -> Result<Self, CapabilityError> {
+=======
+>>>>>>> 9910f1a (Push first version)
         let subject = subject.into();
-        if subject.is_empty() || subject.len() > 256 { return Err(CapabilityError::InvalidSubject); }
-        if !(1..=3600).contains(&ttl_seconds) { return Err(CapabilityError::InvalidTtl); }
+        if subject.is_empty() || subject.len() > 256 {
+            return Err(CapabilityError::InvalidSubject);
+        }
+        if !(1..=3600).contains(&ttl_seconds) {
+            return Err(CapabilityError::InvalidTtl);
+        }
         let now = unix_seconds()?;
-        Ok(Self { id: Uuid::new_v4(), operation, subject, expires_unix_seconds: now.saturating_add(ttl_seconds) })
+        Ok(Self {
+            id: Uuid::new_v4(),
+            operation,
+            subject,
+            expires_unix_seconds: now.saturating_add(ttl_seconds),
+        })
     }
 
 <<<<<<< HEAD
@@ -281,27 +302,65 @@ impl PolicyEngine {
 =======
 =======
         if request.subject.is_empty() || request.subject.len() > 256 {
-            return Decision { allowed: false, reason: "workflow subject is outside configured bounds" };
+            return Decision {
+                allowed: false,
+                reason: "workflow subject is outside configured bounds",
+            };
         }
 >>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
         if request.argument.len() > MAX_ARGUMENT_BYTES {
-            return Decision { allowed: false, reason: "argument exceeds the configured policy limit" };
+            return Decision {
+                allowed: false,
+                reason: "argument exceeds the configured policy limit",
+            };
         }
         if request.argument.as_bytes().contains(&0) {
-            return Decision { allowed: false, reason: "argument contains a NUL byte" };
+            return Decision {
+                allowed: false,
+                reason: "argument contains a NUL byte",
+            };
         }
-        if request.label == DataLabel::Secret && matches!(request.operation, Operation::NetworkGet | Operation::NetworkPost) {
-            return Decision { allowed: false, reason: "secret data cannot cross the network boundary" };
+        if request.label == DataLabel::Secret
+            && matches!(
+                request.operation,
+                Operation::NetworkGet | Operation::NetworkPost
+            )
+        {
+            return Decision {
+                allowed: false,
+                reason: "secret data cannot cross the network boundary",
+            };
         }
-        if request.label == DataLabel::Untrusted && matches!(request.operation, Operation::FileWrite | Operation::SecretRead) {
-            return Decision { allowed: false, reason: "untrusted data cannot drive a sensitive operation" };
+        if request.label == DataLabel::Untrusted
+            && matches!(
+                request.operation,
+                Operation::FileWrite | Operation::SecretRead
+            )
+        {
+            return Decision {
+                allowed: false,
+                reason: "untrusted data cannot drive a sensitive operation",
+            };
         }
         let now = unix_seconds().unwrap_or(u64::MAX);
-        if capabilities.iter().any(|capability| capability.authorizes(request.operation, &request.subject, now)) {
-            Decision { allowed: true, reason: "matching unexpired capability" }
+        if capabilities
+            .iter()
+            .any(|capability| capability.authorizes(request.operation, &request.subject, now))
+        {
+            Decision {
+                allowed: true,
+                reason: "matching unexpired capability",
+            }
         } else {
+<<<<<<< HEAD
             Decision { allowed: false, reason: "no matching unexpired capability" }
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+            Decision {
+                allowed: false,
+                reason: "no matching unexpired capability",
+            }
+>>>>>>> 9910f1a (Push first version)
         }
     }
 }
@@ -331,6 +390,7 @@ pub struct AuditEntry {
 pub struct AuditChain {
     entries: Vec<AuditEntry>,
 }
+<<<<<<< HEAD
 =======
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 =======
@@ -338,6 +398,8 @@ pub struct AuditChain {
 >>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
 pub struct AuditChain { entries: Vec<AuditEntry> }
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+>>>>>>> 9910f1a (Push first version)
 
 /// Audit validation errors.
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -350,11 +412,15 @@ pub enum AuditError {
 impl AuditChain {
     /// Appends a hashed event.
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 9910f1a (Push first version)
     pub fn append(
         &mut self,
         workflow_id: impl Into<String>,
         event: impl Into<String>,
     ) -> Result<&AuditEntry, AuditError> {
+<<<<<<< HEAD
         let workflow_id = workflow_id.into();
         let event = event.into();
         if workflow_id.is_empty()
@@ -379,16 +445,35 @@ impl AuditChain {
         });
 =======
     pub fn append(&mut self, workflow_id: impl Into<String>, event: impl Into<String>) -> Result<&AuditEntry, AuditError> {
+=======
+>>>>>>> 9910f1a (Push first version)
         let workflow_id = workflow_id.into();
         let event = event.into();
-        if workflow_id.is_empty() || workflow_id.len() > 256 || event.is_empty() || event.len() > 4096 {
+        if workflow_id.is_empty()
+            || workflow_id.len() > 256
+            || event.is_empty()
+            || event.len() > 4096
+        {
             return Err(AuditError::Oversized);
         }
         let sequence = u64::try_from(self.entries.len()).unwrap_or(u64::MAX);
-        let previous_hash = self.entries.last().map_or_else(|| "0".repeat(64), |entry| entry.hash.clone());
+        let previous_hash = self
+            .entries
+            .last()
+            .map_or_else(|| "0".repeat(64), |entry| entry.hash.clone());
         let hash = calculate_hash(sequence, &workflow_id, &event, &previous_hash);
+<<<<<<< HEAD
         self.entries.push(AuditEntry { sequence, workflow_id, event, previous_hash, hash });
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+        self.entries.push(AuditEntry {
+            sequence,
+            workflow_id,
+            event,
+            previous_hash,
+            hash,
+        });
+>>>>>>> 9910f1a (Push first version)
         self.entries.last().ok_or(AuditError::Oversized)
     }
 
@@ -398,6 +483,9 @@ impl AuditChain {
         let mut previous = "0".repeat(64);
         for (index, entry) in self.entries.iter().enumerate() {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 9910f1a (Push first version)
             if entry.sequence != u64::try_from(index).unwrap_or(u64::MAX)
                 || entry.previous_hash != previous
             {
@@ -410,6 +498,7 @@ impl AuditChain {
                 &entry.previous_hash,
             );
             if entry.hash != expected {
+<<<<<<< HEAD
                 return false;
             }
 =======
@@ -419,6 +508,10 @@ impl AuditChain {
             let expected = calculate_hash(entry.sequence, &entry.workflow_id, &entry.event, &entry.previous_hash);
             if entry.hash != expected { return false; }
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+                return false;
+            }
+>>>>>>> 9910f1a (Push first version)
             previous.clone_from(&entry.hash);
         }
         true
@@ -427,12 +520,18 @@ impl AuditChain {
     /// Entries for persistence or inspection.
     #[must_use]
 <<<<<<< HEAD
+<<<<<<< HEAD
     pub fn entries(&self) -> &[AuditEntry] {
         &self.entries
     }
 =======
     pub fn entries(&self) -> &[AuditEntry] { &self.entries }
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+    pub fn entries(&self) -> &[AuditEntry] {
+        &self.entries
+    }
+>>>>>>> 9910f1a (Push first version)
 }
 
 fn calculate_hash(sequence: u64, workflow_id: &str, event: &str, previous_hash: &str) -> String {
@@ -449,14 +548,20 @@ fn calculate_hash(sequence: u64, workflow_id: &str, event: &str, previous_hash: 
 fn unix_seconds() -> Result<u64, CapabilityError> {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 9910f1a (Push first version)
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_secs())
         .map_err(|_| CapabilityError::Clock)
+<<<<<<< HEAD
 =======
     SystemTime::now().duration_since(UNIX_EPOCH).map(Duration::as_secs).map_err(|_| CapabilityError::Clock)
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
 =======
     SystemTime::now().duration_since(UNIX_EPOCH).map(|duration| duration.as_secs()).map_err(|_| CapabilityError::Clock)
 >>>>>>> e1d31e7 (chore: harden runtime, deployment, and release pipeline)
+=======
+>>>>>>> 9910f1a (Push first version)
 }

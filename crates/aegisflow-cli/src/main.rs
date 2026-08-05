@@ -4,14 +4,20 @@ use clap::{Parser, ValueEnum};
 
 #[derive(Debug, Parser)]
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 9910f1a (Push first version)
 #[command(
     name = "aegisflow",
     version,
     about = "Evaluate an agent tool request against a deny-by-default policy"
 )]
+<<<<<<< HEAD
 =======
 #[command(name = "aegisflow", version, about = "Evaluate an agent tool request against a deny-by-default policy")]
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+>>>>>>> 9910f1a (Push first version)
 struct Cli {
     #[arg(long, value_enum)]
     operation: CliOperation,
@@ -29,6 +35,9 @@ struct Cli {
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 9910f1a (Push first version)
 enum CliOperation {
     FileRead,
     FileWrite,
@@ -36,6 +45,7 @@ enum CliOperation {
     NetworkPost,
     SecretRead,
 }
+<<<<<<< HEAD
 #[derive(Clone, Copy, Debug, ValueEnum)]
 enum CliLabel {
     Public,
@@ -48,6 +58,15 @@ enum CliOperation { FileRead, FileWrite, NetworkGet, NetworkPost, SecretRead }
 #[derive(Clone, Copy, Debug, ValueEnum)]
 enum CliLabel { Public, Trusted, Untrusted, Secret }
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+#[derive(Clone, Copy, Debug, ValueEnum)]
+enum CliLabel {
+    Public,
+    Trusted,
+    Untrusted,
+    Secret,
+}
+>>>>>>> 9910f1a (Push first version)
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
@@ -67,6 +86,9 @@ fn main() -> anyhow::Result<()> {
     let capabilities = if cli.issue_capability {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 9910f1a (Push first version)
         vec![
             Capability::issue(operation, cli.subject.clone(), cli.ttl_seconds)
                 .context("capability issuance failed")?,
@@ -74,6 +96,7 @@ fn main() -> anyhow::Result<()> {
     } else {
         Vec::new()
     };
+<<<<<<< HEAD
     let request = ToolRequest::new(&cli.subject, operation, label, cli.argument);
     let decision = PolicyEngine.evaluate(&request, &capabilities);
     let mut audit = AuditChain::default();
@@ -105,5 +128,22 @@ fn main() -> anyhow::Result<()> {
         "audit": audit.entries(),
     }))?);
 >>>>>>> 2081585 (feat: initialize production-ready Rust scaffold)
+=======
+    let request = ToolRequest::new(&cli.subject, operation, label, cli.argument);
+    let decision = PolicyEngine.evaluate(&request, &capabilities);
+    let mut audit = AuditChain::default();
+    audit.append(
+        &cli.subject,
+        format!("{}:{}", decision.allowed, decision.reason),
+    )?;
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&serde_json::json!({
+            "decision": decision,
+            "audit_valid": audit.verify(),
+            "audit": audit.entries(),
+        }))?
+    );
+>>>>>>> 9910f1a (Push first version)
     Ok(())
 }
